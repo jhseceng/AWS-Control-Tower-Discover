@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CrowdStrike Horizon (CSPM) Org root account template (qs-1tjh1cie3)
+Metadata:
+  cfn-lint:
+    config:
+      ignore_checks:
+        - E9007 # Gov cloud not supported
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: CrowdStrike Params From API Response
+        Parameters:
+          - RoleName
+          - ExternalID
+      - Label:
+          default: CrowdStrike Region Specific Params
+        Parameters:
+          - CSRoleName
+          - CSAccountNumber
+    ParameterLabels:
+      RoleName:
+        default: Rolename supplied by CrowdStrike
+      ExternalID:
+        default: ExternalID supplied by CrowdStrike
+      CSRoleName:
+        default: Determined by Region your CID is in
+      CSAccountNumber:
+        default: CrowdStrike customer facing account for EventBridge and S3
+Parameters:
+  RoleName:
+    Description: Read-only role for CrowdStrike Falcon CSPM
+    Type: String
+    MinLength: '1'
+  ExternalID:
+    Description: External ID for created role
+    Type: String
+    MinLength: '2'
+  CSRoleName:
+    Description: Name of Crowdstrike assuming role
+    Type: String
+    MinLength: '10'
+  CSAccountNumber:
+    Description: Crowdstrike account number
+    Type: String
+    MinLength: '12'
+    MaxLength: '12'
+Resources:
+  #
+  # IAM Role the CrowdStrike will assume to discover resources in the account
+  #
+  CrowdStrikeCSPMRole:
+    Type: AWS::IAM::Role
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - EIAMPolicyWildcardResource # Role has * to allow for future service monitoring without stack updates
+            - EIAMPolicyActionWildcard # Role has * to allow for future service monitoring without stack updates
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Join
+                - ''
+                - - 'arn:aws:iam::'
+                  - !Ref 'CSAccountNumber'
+                  - :role/
+                  - !Ref 'CSRoleName'
+            Condition:
+              StringEquals:
+                sts:ExternalId: !Ref 'ExternalID'
+            Action:
+              - sts:AssumeRole
+      RoleName: !Ref 'RoleName'
+      Policies:
+        - PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Resource: '*'
+                Action:
+                  - ec2:DescribeInstances
+                  - ec2:DescribeImages
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:DescribeVolumes
+                  - ec2:DescribeVpcs
+                  - ec2:DescribeRegions
+                  - ec2:DescribeSubnets
+                  - ec2:DescribeNetworkAcls
+                  - ec2:DescribeSecurityGroups
+                  - iam:ListAccountAliases
+                  - organizations:List*
+                  - organizations:Describe*
+
