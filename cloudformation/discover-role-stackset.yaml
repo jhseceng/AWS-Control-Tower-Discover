@@ -56,6 +56,7 @@ Resources:
           ignore_checks:
             - EIAMPolicyWildcardResource # Role has * to allow for future service monitoring without stack updates
             - EIAMPolicyActionWildcard # Role has * to allow for future service monitoring without stack updates
+
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -91,5 +92,7 @@ Resources:
                   - ec2:DescribeNetworkAcls
                   - ec2:DescribeSecurityGroups
                   - iam:ListAccountAliases
-
+                  - iam:SimulateCustomPolicy
+                  - iam:SimulatePrincipalPolicy
+          PolicyName: d4c_config
 
