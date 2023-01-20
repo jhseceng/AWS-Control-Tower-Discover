@@ -93,4 +93,6 @@ Resources:
                   - iam:ListAccountAliases
                   - organizations:List*
                   - organizations:Describe*
+                  - iam:SimulateCustomPolicy
+                  - iam:SimulatePrincipalPolicy
 
